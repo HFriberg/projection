@@ -2,11 +2,7 @@ using LinearAlgebra
 using Formatting
 using Quadmath
 
-real = Float64
-#real = Float128
-#real = BigFloat
-
-function hfun(v0::Array{real,1}, rho::real)
+function hfun(v0::Array{real,1}, rho::real) where real<:Real
     t0,s0,r0 = v0;
     exprho = exp(rho);
     expnegrho = exp(-rho);
@@ -15,7 +11,7 @@ function hfun(v0::Array{real,1}, rho::real)
     return [f,df];
 end
 
-function rootsearch_bn(fun::Function, farg::Any, xl::real, xh::real, x0::real)
+function rootsearch_bn(fun::Function, farg::Any, xl::real, xh::real, x0::real) where real<:Real
     EPS = eps(real);
 
     @assert xl<=x0<=xh
@@ -46,7 +42,7 @@ end
 #
 # Newton root search for strictly increasing functions
 #
-function rootsearch_ntinc(fun::Function, farg::Any, xl::real, xh::real, x0::real)
+function rootsearch_ntinc(fun::Function, farg::Any, xl::real, xh::real, x0::real) where real<:Real
     EPS = eps(real);
     DFTOL = EPS^(6/7);
     MAXITER = 20;
@@ -101,7 +97,7 @@ function rootsearch_ntinc(fun::Function, farg::Any, xl::real, xh::real, x0::real
     end
 end
 
-function projheu_primalexpcone(v0::Array{real,1})
+function projheu_primalexpcone(v0::Array{real,1}) where real<:Real
     t0,s0,r0 = v0
 
     # perspective boundary
@@ -121,7 +117,7 @@ function projheu_primalexpcone(v0::Array{real,1})
     return [vp,dist]
 end
 
-function projheu_polarexpcone(v0::Array{real,1})
+function projheu_polarexpcone(v0::Array{real,1}) where real<:Real
     t0,s0,r0 = v0
 
     # perspective boundary
@@ -141,7 +137,7 @@ function projheu_polarexpcone(v0::Array{real,1})
     return [vd,dist]
 end
 
-function projsol_primalexpcone(v0::Array{real,1}, rho::real)
+function projsol_primalexpcone(v0::Array{real,1}, rho::real) where real<:Real
     t0,s0,r0 = v0
     local vp,dist
 
@@ -159,7 +155,7 @@ function projsol_primalexpcone(v0::Array{real,1}, rho::real)
     return [vp,dist]
 end
 
-function projsol_polarexpcone(v0::Array{real,1}, rho::real)
+function projsol_polarexpcone(v0::Array{real,1}, rho::real) where real<:Real
     t0,s0,r0 = v0
     local vd,dist
 
@@ -177,7 +173,7 @@ function projsol_polarexpcone(v0::Array{real,1}, rho::real)
     return [vd,dist]
 end
 
-function ppsi(v0::Array{real,1})
+function ppsi(v0::Array{real,1}) where real<:Real
     t0,s0,r0 = v0
     
     # two expressions for the same to avoid catastrophic cancellation
@@ -190,7 +186,7 @@ function ppsi(v0::Array{real,1})
     return ((psi-1)*r0 + s0)/(psi*(psi-1) + 1)
 end
 
-function pomega(rho::real)
+function pomega(rho::real) where real<:Real
     val = exp(rho)/(rho*(rho-1)+1)
     if rho < 2.0
         val = min(val, exp(parse(real,"2"))/3)
@@ -199,7 +195,7 @@ function pomega(rho::real)
     return val
 end
 
-function dpsi(v0::Array{real,1})
+function dpsi(v0::Array{real,1}) where real<:Real
     t0,s0,r0 = v0
     
     # two expressions for the same to avoid catastrophic cancellation
@@ -213,7 +209,7 @@ function dpsi(v0::Array{real,1})
     return res
 end
 
-function domega(rho::real)
+function domega(rho::real) where real<:Real
     val = -exp(-rho)/(rho*(rho-1)+1)
     if rho > -1.0
         val = max(val, -exp(one(real))/3)
@@ -222,10 +218,10 @@ function domega(rho::real)
     return val
 end
 
-function searchbracket(v0::Array{real,1}, pdist::real, ddist::real)
+function searchbracket(v0::Array{real,1}, pdist::real, ddist::real) where real<:Real
     t0,s0,r0 = v0
-    baselow,baseupr = -Inf,Inf
-    low,upr = -Inf,Inf
+    baselow,baseupr = real(-Inf),real(Inf)
+    low,upr = real(-Inf),real(Inf)
 
     Dp = sqrt(pdist^2 - min(s0,0)^2)
     Dd = sqrt(ddist^2 - min(r0,0)^2)
@@ -285,7 +281,7 @@ function searchbracket(v0::Array{real,1}, pdist::real, ddist::real)
     return [low,upr]
 end
 
-function proj_primalexpcone(v0::Array{real,1})
+function proj_primalexpcone(v0::Array{real,1}) where real<:Real
     TOL = eps(real)^(2/3)
     t0,s0,r0 = v0
     
@@ -314,20 +310,20 @@ function proj_primalexpcone(v0::Array{real,1})
     return [vp,vd]
 end
 
-function abserr(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1})
+function abserr(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1}) where real<:Real
     return [norm(vp + vd - v0,2), 
             abs(dot(vp,vd))];
 end
 
-function relerr(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1})
+function relerr(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1}) where real<:Real
     return abserr(v0,vp,vd) / max(1.0,norm(v0,2));
 end
 
-function solutionreport(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1})
-    println("abserr=$(fmt.("1.1e",Float64.(abserr(v0,vp,vd))))\nrelerr=$(fmt.("1.1e",Float64.(abserr(v0,vp,vd))))\n  v0=$(Float64.(v0))\n  vp=$(Float64.(vp)) in primal\n  vd=$(Float64.(vd)) in polar\n")
+function solutionreport(v0::Array{real,1}, vp::Array{real,1}, vd::Array{real,1}) where real<:Real
+    println("abserr=$(fmt.("1.1e",Float64.(abserr(v0,vp,vd))))\nrelerr=$(fmt.("1.1e",Float64.(relerr(v0,vp,vd))))\n  v0=$(Float64.(v0))\n  vp=$(Float64.(vp)) in primal\n  vd=$(Float64.(vd)) in polar\n")
 end
 
-function test()
+function test(real::Type)
     low=-20;
     upr= 21;
     domain = [-exp.(low:upr); 0.0; exp.(low:upr)]
@@ -371,11 +367,78 @@ function test()
     return (maxerr1=maxerr1, maxerr2=maxerr2, numproj=numproj, totaltime=time, avgtime=time/numproj);
 end
 
-v0 = Array{real,1}( [1, 1, 1] );
+function testCOSMO()
+    low=-20;
+    upr= 21;
+    domain = [-exp.(low:upr); 0.0; exp.(low:upr)]
+
+    maxerr1 = 0.0;
+    maxerr2 = 0.0;
+
+    COSMOpexp = COSMO.ExponentialCone();
+
+    function COSMOproj_primalexpcone(v0)
+        # compute vp using COSMO
+        vp = reverse(v0);
+        COSMO.project!(vp, COSMOpexp);
+        vp=reverse(vp)
+
+        # fill in missing details of vd (computed in high precision for an unbiased comparison)
+        _,vd = proj_primalexpcone(Array{Float128,1}(v0))
+        vd = Float64.(vd)
+
+        return [vp,vd]
+    end
+
+    #v0 = Array{Float64,1}( [1, 1, 1] );
+    #vp,vd = COSMOproj_primalexpcone(v0)
+    #solutionreport(v0,vp,vd)
+
+    # precompile and extract stats
+    begin
+        for t0 in domain
+            for s0 in domain
+                for r0 in domain
+                    v0 = Array{Float64,1}( [t0, s0, r0] );
+                    try
+                        vp,vd = COSMOproj_primalexpcone(v0)
+                        curerr1,curerr2 = relerr(v0,vp,vd);
+                        maxerr1 = max(maxerr1, curerr1)
+                        maxerr2 = max(maxerr2, curerr2)
+                    catch
+                        println("ERROR: $v0")
+                        rethrow()
+                    end
+                end
+            end
+        end
+    end
+
+    # benchmark time
+    time = @elapsed begin
+        for t0 in domain
+            for s0 in domain
+                for r0 in domain
+                    v0 = Array{Float64,1}( [t0, s0, r0] );
+                    COSMO.project!(v0, COSMOpexp);
+                end
+            end
+        end
+    end
+
+    numproj=length(domain)^3
+    return (maxerr1=maxerr1, maxerr2=maxerr2, numproj=numproj, totaltime=time, avgtime=time/numproj);
+end
+
+v0 = Array{Float64,1}( [1, 1, 1] );
 vp,vd = proj_primalexpcone(v0)
 solutionreport(v0,vp,vd)
 
 if true
-    println(test())
+    println(test(Float64));
 end
 
+if true
+    using COSMO;
+    println(testCOSMO());
+end
